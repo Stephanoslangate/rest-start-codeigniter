@@ -51,6 +51,7 @@ $routes->get('user/modif', 'UtilisateurController::adduser');
 
 $routes->get('facture', 'UtilisateurController::print');//Dowmload
 $routes->get('users', 'UtilisateurController::listeuser');//Dowmload
+$routes->post('authentification', 'UtilisateurController::logintrue');//Dowmload
 
 /*
  * --------------------------------------------------------------------

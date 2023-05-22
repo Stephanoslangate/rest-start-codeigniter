@@ -6,12 +6,22 @@ namespace App\Controllers;
 use CodeIgniter\RESTful\ResourceController;
 //use App\Controllers\BaseController;
 
+
 class UtilisateurController extends ResourceController
 {
     protected $modelName = 'App\Models\Utilisateur';
     protected $format = 'json';
 
+    private $pepper ="c1isvFdxMDdmjOlvxpecFw";
+
+   /*  private \Config\Encryption $config  ;
     
+    function __construct() {
+        $config  = new \Config\Encryption();
+        $config->key    = 'aBigsecret_ofAtleast32Characters';
+        $config->driver = 'OpenSSL';
+        
+    } */
     /**
      * Return an array of resource objects, themselves in array format
      *
@@ -59,6 +69,7 @@ class UtilisateurController extends ResourceController
      */
     public function create()
     {
+
         //definition de la validation des champs,
         $rules = $this->validate([
             'nom'       => 'required',
@@ -72,18 +83,34 @@ class UtilisateurController extends ResourceController
             ];
             return $this->failValidationErrors($response);
         }
+        $is_email = $this->model->where('email',$this->request->getVar('email'))->first();
+        if($is_email){
+            return $this->respondCreated([
+                'status' => 0,
+                'message' => 'adresse mail exist'
+            ]);
+        }
+        $pwd = $this->request->getVar('password');
+        $pwd_hashed = password_hash($pwd, PASSWORD_DEFAULT);
+       // $encrypter = \Config\Services::encrypter($this->$config);
+        //$pwdE= $encrypter->encrypt($pwd);
+
+
+      //  echo $pwd_hashed."  v=".$verif;
+
+
         $this->model->insert(
             [
                 'nom' => esc($this->request->getVar('nom')),
                 'prenom' => esc($this->request->getVar('prenom')),
                 'email' => esc($this->request->getVar('email')),
-                'password' => esc($this->request->getVar('password'))
+                'password' => $pwd_hashed
             ]
         );
         $response =[
             'message' => 'Utilisateur bien ajoute',
         ];
-        return $this->respondCreated($response);
+        return $this->respondCreated($response); 
     }
 
     /**
@@ -181,6 +208,7 @@ class UtilisateurController extends ResourceController
             return view("utilisateur/login", $data);
            // return $this->failValidationErrors($response);
         }
+
         $this->model->where('email',$this->request->getVar('email'))->findAll();
         $response =[
             'message' => 'Utilisateur bien trouve',
@@ -219,12 +247,19 @@ class UtilisateurController extends ResourceController
             return view("utilisateur/add", $response);
 
         }
+        $is_email = $this->model->where('email',$this->request->getVar('email'))->first();
+        if($is_email){
+            return $this->respondCreated([
+                'status' => 0,
+                'message' => 'adresse mail exist'
+            ]);
+        }
         $this->model->insert(
             [
                 'nom' => esc($this->request->getVar('nom')),
                 'prenom' => esc($this->request->getVar('prenom')),
                 'email' => esc($this->request->getVar('email')),
-                'password' => esc($this->request->getVar('password'))
+                'password' => password_hash($this->request->getVar('password'))
             ]
         );
         $response =[
@@ -280,5 +315,69 @@ class UtilisateurController extends ResourceController
         $dompdf->stream('monPdf5');
         //echo "bonjour";
     }
+
+     /**
+     * Get user on login and password, from "posted" parameters
+     *
+     * @return mixed
+     */
+    public function logintrue()
+    {
+        //definition de la validation des champs,
+        
+
+        $rules = $this->validate([
+            'email'     => 'required',
+            'password'  => 'required',
+        ]);
+        if(!$rules){
+            $response =[
+                'message'=> $this->validator->getErrors()
+            ];
+            $data['message']= 'erreur de saisie';
+            return view("utilisateur/login", $data);
+           // return $this->failValidationErrors($response);
+        }
+        $email = $this->request->getVar('email');
+        $password = $this->request->getVar('password');
+        $is_email = $this->model->where('email',$email)->first();
+        if($is_email){
+            //$encrypter = \Config\Services::encrypter($this->$config);
+            //$pwdD = $this->$encrypter->decrypt($is_email['password']);
+            // Outputs: This is a plain-text message!
+            //echo "Crypt: ".$password." Decrypt: ".$pwdD;
+            $passHash = $is_email['password'];
+            $verif = password_verify($password,$passHash);
+
+            var_dump($verif);
+            if($verif){
+                $response =[
+                    'statut' => 1,
+                    'message' => 'connection avec success'
+                ];
+                return $this->respondCreated($response);
+            }else{
+                $response =[
+                    'statut' => 0,
+                    'message' => 'email ou mot de pass incorrect'
+                ];
+                return $this->respondCreated($response);
+            }
+        }else{
+            $response =[
+                'statut' => -1,
+                'message' => 'email ou mot de pass incorrect'
+            ];
+            return $this->respondCreated($response);
+        }
+
+
+
+   
+        $data['message']= 'Utilisateur bien trouve';
+        return view("utilisateur/login", $data);
+
+    }
+
 
 }

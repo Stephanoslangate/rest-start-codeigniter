@@ -29,7 +29,7 @@ class Utilisateur extends Migration
             ],
             'password' => [
                 'type' => 'VARCHAR',
-                'constraint' => '50',
+                'constraint' => '250',
             ],
             'created_at' => [
                 'type' => 'DATETIME',
