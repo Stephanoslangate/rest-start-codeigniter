@@ -1,11 +1,10 @@
 <?php
 
 namespace App\Controllers;
-//require FCPATH.'/vendor/autoload.php';
 
 use CodeIgniter\RESTful\ResourceController;
-//use App\Controllers\BaseController;
-
+use \Firebase\JWT\JWT;
+use \Firebase\JWT\Key;
 
 class UtilisateurController extends ResourceController
 {
@@ -336,23 +335,30 @@ class UtilisateurController extends ResourceController
             ];
             $data['message']= 'erreur de saisie';
             return view("utilisateur/login", $data);
-           // return $this->failValidationErrors($response);
         }
         $email = $this->request->getVar('email');
         $password = $this->request->getVar('password');
         $is_email = $this->model->where('email',$email)->first();
         if($is_email){
-            //$encrypter = \Config\Services::encrypter($this->$config);
-            //$pwdD = $this->$encrypter->decrypt($is_email['password']);
-            // Outputs: This is a plain-text message!
-            //echo "Crypt: ".$password." Decrypt: ".$pwdD;
+     
             $passHash = $is_email['password'];
             $verif = password_verify($password,$passHash);
 
-            var_dump($verif);
             if($verif){
+                $key = 'banguidakarnouachokdakar';
+                $payload = [
+                    'iss' => 'localhost',
+                    'aud' => 'localhost',
+                    'data' =>[
+                        'user_id' => $is_email['id'],
+                        'user_name' => $is_email['nom'],
+                        'user_email' => $is_email['email'],
+                    ]
+                ];
+                $jwt = JWT::encode($payload,$key,'HS256');
                 $response =[
                     'statut' => 1,
+                    'jwt' => $jwt,
                     'message' => 'connection avec success'
                 ];
                 return $this->respondCreated($response);
@@ -377,6 +383,19 @@ class UtilisateurController extends ResourceController
         $data['message']= 'Utilisateur bien trouve';
         return view("utilisateur/login", $data);
 
+    }
+
+    public function alluser(){
+        $request = service('request');
+        $key = 'banguidakarnouachokdakar';
+        $headers = $request->getHeader('authorization');
+        $jwt = $headers->getValue();
+        $usersdata = JWT::decode($jwt, new KEY($key,'HS256'));
+        $users = $usersdata->data;
+        return $this->respond([
+            'status' => 1,
+            'users' => $users
+        ]);; 
     }
 
 
