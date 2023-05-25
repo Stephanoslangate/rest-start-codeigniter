@@ -52,6 +52,8 @@ $routes->get('user/modif', 'UtilisateurController::adduser');
 $routes->get('facture', 'UtilisateurController::print');//Dowmload
 $routes->get('users', 'UtilisateurController::listeuser');//Dowmload
 $routes->post('authentification', 'UtilisateurController::logintrue');//Auth with jwt
+$routes->get('authentification', 'UtilisateurController::pagesuiv/$1');//Auth with jwt
+
 $routes->get('lesusers', 'UtilisateurController::alluser');//
 
 /*

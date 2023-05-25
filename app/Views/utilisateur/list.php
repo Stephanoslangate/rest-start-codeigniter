@@ -40,7 +40,7 @@
     <?php 
       foreach ($users as  $user) {
         echo "<tr><th scope='row'>".$user['nom']."</th>";
-        echo "<td style='color: green;'>".$user['prenom']."</td>";
+        echo "<td style=''>".$user['prenom']."</td>";
         echo "<td>".$user['email']."</td></tr>";
       }
     ?>

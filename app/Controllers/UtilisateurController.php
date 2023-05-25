@@ -204,7 +204,7 @@ class UtilisateurController extends ResourceController
                 'message'=> $this->validator->getErrors()
             ];
             $data['message']= 'erreur de saisie';
-            return view("utilisateur/login", $data);
+            return view("login", $data);
            // return $this->failValidationErrors($response);
         }
 
@@ -215,10 +215,10 @@ class UtilisateurController extends ResourceController
         ];
         if($response['Utilisateur_rech']==null){
             $data['message']= 'user n existe pas';
-            return view("utilisateur/login", $data);
+            return view("login", $data);
         }
         $data['message']= 'Utilisateur bien trouve';
-        return view("utilisateur/login", $data);
+        return view("login", $data);
     }
 
 
@@ -258,7 +258,7 @@ class UtilisateurController extends ResourceController
                 'nom' => esc($this->request->getVar('nom')),
                 'prenom' => esc($this->request->getVar('prenom')),
                 'email' => esc($this->request->getVar('email')),
-                'password' => password_hash($this->request->getVar('password'))
+                'password' => password_hash($this->request->getVar('password'),PASSWORD_DEFAULT)
             ]
         );
         $response =[
@@ -301,6 +301,7 @@ class UtilisateurController extends ResourceController
         return view("utilisateur/list", $response);
     }
     public function print(){
+       
         $dompdf = new \Dompdf\Dompdf();
 
         $response =[
@@ -308,10 +309,12 @@ class UtilisateurController extends ResourceController
         ];
         $html = view("utilisateur/list", $response);
        // $dompdf->loadHtml($html);
+       $date = date('Y_m_d_H_i_s');
+       $nomfile= "FISI".$date."SN";
        $dompdf->loadHtml(view("utilisateur/list", $response));
         $dompdf->setPaper('A4','portrait');
         $dompdf->render();
-        $dompdf->stream('monPdf5');
+        $dompdf->stream($nomfile);
         //echo "bonjour";
     }
 
@@ -334,7 +337,7 @@ class UtilisateurController extends ResourceController
                 'message'=> $this->validator->getErrors()
             ];
             $data['message']= 'erreur de saisie';
-            return view("utilisateur/login", $data);
+            return view("login", $data);
         }
         $email = $this->request->getVar('email');
         $password = $this->request->getVar('password');
@@ -356,35 +359,37 @@ class UtilisateurController extends ResourceController
                     ]
                 ];
                 $jwt = JWT::encode($payload,$key,'HS256');
-                $response =[
-                    'statut' => 1,
-                    'jwt' => $jwt,
-                    'message' => 'connection avec success'
-                ];
-                return $this->respondCreated($response);
+                $data=[];
+                $data['page'] = isset($_GET['page']) ? $_GET['page'] : 1;
+                $data['perPage'] = 5;
+                $data['total'] = $this->model->countAll();
+                $data['users'] = $this->model->paginate($data['perPage']);
+                $data['pager'] = $this->model->pager;
+                $data['jwt'] = $jwt;
+                $data['message'] = 'connection avec success';
+             
+                return view("utilisateur/add",$data);
             }else{
-                $response =[
-                    'statut' => 0,
-                    'message' => 'email ou mot de pass incorrect'
-                ];
-                return $this->respondCreated($response);
+                return view("login");
+
             }
         }else{
-            $response =[
-                'statut' => -1,
-                'message' => 'email ou mot de pass incorrect'
-            ];
-            return $this->respondCreated($response);
+            return view("login", $data);
         }
-
-
-
-   
-        $data['message']= 'Utilisateur bien trouve';
-        return view("utilisateur/login", $data);
 
     }
 
+    public function pagesuiv($page){
+        $data=[];
+        $data['page'] = isset($page) ? $page : 1;
+        $data['perPage'] = 5;
+        $data['total'] = $this->model->countAll();
+        $data['users'] = $this->model->paginate($data['perPage']);
+        $data['pager'] = $this->model->pager;
+        $data['message'] = 'connection avec success';
+     
+        return view("utilisateur/add",$data);
+    }
     public function alluser(){
         $request = service('request');
         $key = 'banguidakarnouachokdakar';
